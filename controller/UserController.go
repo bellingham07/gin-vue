@@ -22,7 +22,7 @@ func Info(ctx *gin.Context) {
 
 func Login(ctx *gin.Context) {
 	DB := common.GetDB()
-	//获取参数
+	//获取参数 前端传的json 这种接收方式是不行的 可行方法参考下面的register方法
 	telephone := ctx.PostForm("telephone")
 	password := ctx.PostForm("password")
 	//数据验证
@@ -30,14 +30,13 @@ func Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 422, "msg": "手机号必须为11位"})
 		return
 	}
-
 	if len(password) < 6 {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 422, "msg": "密码不能少于6位"})
 		return
 	}
 	//判断手机号是否存在
 	var user model.User
-	DB.Where("telephone=?", telephone).First(&user)
+	DB.Where("telephone=?", telephone).First(&user) //first相当于只查询一条数据
 	if user.ID == 0 {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 422, "msg": "用户不存在"})
 		return
@@ -65,6 +64,7 @@ func Register(ctx *gin.Context) {
 	//gin框架提供的绑定参数
 	var requestUser = model.User{}
 	ctx.Bind(&requestUser)
+	//将获取到的值取出
 	name := requestUser.Name
 	telephone := requestUser.Telephone
 	password := requestUser.Password
@@ -78,7 +78,7 @@ func Register(ctx *gin.Context) {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "密码不能少于6位")
 		return
 	}
-	//如果名称没传，就给一个十位随机数
+	//如果名称没传，就给一个十位随机字母
 	if len(name) == 0 {
 		name = util.RandomString(10)
 	}
@@ -96,12 +96,14 @@ func Register(ctx *gin.Context) {
 		response.Response(ctx, http.StatusInternalServerError, 500, nil, "加密错误")
 		return
 	}
+	//给新用户赋值
 	newUser := model.User{
 		Name:      name,
 		Telephone: telephone,
 		Password:  string(hasedPassword),
 	}
 
+	//保存到数据库
 	DB.Create(&newUser)
 
 	//发放token

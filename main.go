@@ -10,12 +10,12 @@ import (
 )
 
 func main() {
-	InitConfig()
-	db := common.InitDB()
+	InitConfig()          //加在配置类
+	db := common.InitDB() //初始化数据库
 	defer db.Close()
 	r := gin.Default()
-	r = route.CollectRoute(r)
-	port := viper.GetString("server.port")
+	r = route.CollectRoute(r)              //配置路由
+	port := viper.GetString("server.port") //获取配置类所设置的端口号
 	if port != "" {
 		panic(r.Run(":" + port))
 	}
@@ -23,6 +23,7 @@ func main() {
 }
 
 func InitConfig() {
+	//初始化配置类
 	workDir, _ := os.Getwd()
 	viper.SetConfigName("application")
 	viper.SetConfigType("yml")

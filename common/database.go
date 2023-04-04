@@ -25,7 +25,7 @@ func InitDB() *gorm.DB {
 		panic("failed to connect database ,err:" + err.Error())
 	}
 
-	//gorm自动创建数据表
+	//gorm根据模型 自动创建数据表
 	db.AutoMigrate(&model.User{})
 
 	DB = db //不赋值会出现空指针错误
